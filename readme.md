@@ -54,7 +54,7 @@ O projeto foi estruturado em cenários de teste cobrindo operações CRUD para a
 ## 📎 Links Úteis
 
 - [Documentação do Robot Framework](https://robotframework.org/).
-- [Documentação da RequestsLibrary](https://robotframework-requests.netlify.app/).
+- [Documentação da RequestsLibrary](https://docs.robotframework.org/docs/different_libraries/requests).
 - [Documentação do MongoDB](https://www.mongodb.com/docs/).
 - [Documentação do RabbitMQ](https://www.rabbitmq.com/documentation.html).
 

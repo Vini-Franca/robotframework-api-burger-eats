@@ -1,4 +1,26 @@
-/log
-/log.html
-/output.xml
-/report.html
+# Ignorar pastas do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar ambientes virtuais
+venv/
+env/
+
+# Ignorar arquivos e pastas de output do Robot Framework
+output/
+report/
+log/
+results/
+output.xml
+report.html
+log.html
+debug.log
+
+# Ignorar arquivos de execução paralela do Pabot
+pabot_results/
+
+# Ignorar configurações de IDEs
+.idea/
+.vscode/

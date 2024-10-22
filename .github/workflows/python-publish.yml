@@ -49,31 +49,18 @@ jobs:
           echo "Listing results directory..."
           ls -la results
 
-      - name: Check output.xml and report.html
-        run: |
-          if [ -f results/output.xml ]; then
-            cat results/output.xml
-          else
-            echo "output.xml not found."
-          fi
-          if [ -f results/report.html ]; then
-            cat results/report.html
-          else
-            echo "report.html not found."
-          fi
-
       - name: Generate Simple Summary
         run: |
           echo "Robot Framework Results:" > summary.txt
           if [ -f results/output.xml ]; then
-            PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml | head -1)
-            FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml | head -1)
+            PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml || echo "0")
+            FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml || echo "0")
+            DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html || echo "N/A")
             echo "Tests Passed: $PASSED" >> summary.txt
             echo "Tests Failed: $FAILED" >> summary.txt
-            DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html)
             echo "Total Duration: $DURATION" >> summary.txt
           else
-            echo "Results not found. Check if tests were executed successfully." >> summary.txt
+            echo "output.xml not found. Results not available." >> summary.txt
           fi
           # Adicionar o resumo ao GITHUB_STEP_SUMMARY
           cat summary.txt >> $GITHUB_STEP_SUMMARY

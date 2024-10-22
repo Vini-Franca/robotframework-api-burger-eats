@@ -1,6 +1,12 @@
 name: Robot Framework API Tests
 on: [push]
 
+# Adiciona permissões necessárias
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -15,7 +21,7 @@ jobs:
 
       - name: Install API dependencies
         run: |
-          cd api
+          cd API
           npm install
           npm start &  # Inicia a API em segundo plano
 
@@ -73,14 +79,14 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4  # Atualizado para v4
+        uses: actions/upload-artifact@v4
         with:
           name: robot-framework-results
           path: |
             results/report.html
             results/log.html
             results/output.xml
-          retention-days: 30  # Opcional: define por quantos dias manter os artefatos
+          retention-days: 30
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -88,3 +94,4 @@ jobs:
         with:
           files: "results/output.xml"
           report_individual_runs: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Explicitamente definindo o token

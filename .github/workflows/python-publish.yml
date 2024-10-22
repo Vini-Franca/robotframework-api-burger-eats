@@ -58,18 +58,20 @@ jobs:
     needs: run-tests
     steps:
       - uses: actions/checkout@v3
+      
       - name: Download reports
         uses: actions/download-artifact@v3
         with:
           name: reports
+      
       - name: Check downloaded files
         run: |
           echo "Checking downloaded reports..."
-          ls -la reports
+          ls -la results  # Corrigido para usar 'results' em vez de 'reports'
 
       - name: Send report to commit
         uses: joonvena/robotframework-reporter-action@v2.5
         with:
           gh_access_token: ${{ secrets.GITHUB_TOKEN }}
-          report: reports/report.html  # Corrigido para refletir o caminho correto
-          log: reports/log.html  # Corrigido para refletir o caminho correto
+          report: results/report.html  # Usando o caminho correto para o relatório
+          log: results/log.html  # Usando o caminho correto para o log

@@ -1,4 +1,4 @@
-name: Run Robot Framework Tests
+name: Robot Framework API Tests
 
 on: [push]
 
@@ -7,11 +7,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set Up Python
-        uses: actions/setup-python@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install API dependencies
+        run: |
+          cd api  # Correção para 'api' minúsculo
+          npm install
+          npm start &  # Inicia a API em segundo plano
+          sleep 5  # Aguarda um pouco para a API iniciar
+
+      - name: Install Python and Robot Framework
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
@@ -22,28 +34,52 @@ jobs:
           pip install robotframework-requests
           pip install robot-mongodb-library
 
-      - name: Run Robot Framework Tests
+      - name: Run Robot Framework tests
         run: |
           robot --outputdir results tests/
+          if [ $? -ne 0 ]; then
+            echo "Robot Framework tests failed. Check the logs for details."
+            exit 1
+          fi
+          # Imprimir logs
+          cat results/log.html
 
-      - name: Generate Summary for GitHub Actions
+      - name: List results directory
         run: |
-          echo "### Robot Framework Results" > summary.md
-          echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> summary.md
-          echo "|--------|-----------|-----------|-------------|" >> summary.md
+          echo "Listing results directory..."
+          ls -la results
+
+      - name: Check output.xml and report.html
+        run: |
+          if [ -f results/output.xml ]; then
+            cat results/output.xml
+          else
+            echo "output.xml not found."
+          fi
+          if [ -f results/report.html ]; then
+            cat results/report.html
+          else
+            echo "report.html not found."
+          fi
+
+      - name: Generate Simple Summary
+        run: |
+          echo "Robot Framework Results:" > summary.txt
           if [ -f results/output.xml ]; then
             PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml | head -1)
             FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml | head -1)
+            echo "Tests Passed: $PASSED" >> summary.txt
+            echo "Tests Failed: $FAILED" >> summary.txt
             DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html)
-            echo "| Tests  | $PASSED    | $FAILED    | $DURATION |" >> summary.md
+            echo "Total Duration: $DURATION" >> summary.txt
           else
-            echo "Results not found. Check if tests were executed successfully." >> summary.md
+            echo "Results not found. Check if tests were executed successfully." >> summary.txt
           fi
-          # Move summary to GITHUB_STEP_SUMMARY
-          mv summary.md $GITHUB_STEP_SUMMARY
+          # Adicionar o resumo ao GITHUB_STEP_SUMMARY
+          cat summary.txt >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload Robot Framework Results
+      - name: Upload test reports
         uses: actions/upload-artifact@v3
         with:
-          name: robot-results
+          name: robot-framework-reports
           path: results/

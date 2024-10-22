@@ -15,9 +15,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install Dependencies
+      - name: Install Robot Framework dependencies
         run: |
-          pip install -r requirements.txt
+          pip install robotframework
+          pip install robotframework-yamllibrary
+          pip install robotframework-requests
           pip install robot-mongodb-library
 
       - name: Run Robot Framework Tests

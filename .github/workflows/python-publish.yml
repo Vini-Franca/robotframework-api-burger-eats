@@ -17,7 +17,7 @@ jobs:
 
       - name: Install API dependencies
         run: |
-          cd API
+          cd api
           npm install
           npm start &  # Inicia a API em segundo plano
 

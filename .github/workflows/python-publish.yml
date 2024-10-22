@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'  # ou a versão necessária
+        node-version: '16'
 
     - name: Install dependencies for API
       run: |
@@ -45,15 +45,9 @@ jobs:
         pip install robotframework-yamllibrary
         pip install robot-mongodb-library
 
-    - name: Custom Log - Start Tests
-      run: echo ">>> Starting Robot Framework Tests..."
-
     - name: Run Robot Framework tests
       run: |
         robot --outputdir results tests/
-
-    - name: Custom Log - Test Completed
-      run: echo ">>> Robot Framework Tests Completed!"
 
     - name: Archive Robot Framework results
       uses: actions/upload-artifact@v3
@@ -66,7 +60,7 @@ jobs:
         echo "### Robot Framework Results" >> $GITHUB_STEP_SUMMARY
         echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> $GITHUB_STEP_SUMMARY
         echo "|--------|-----------|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
-        PASSED=$(grep -o 'Pass [0-9]*' results/output.xml | awk '{print $2}')
-        FAILED=$(grep -o 'Fail [0-9]*' results/output.xml | awk '{print $2}')
+        PASSED=$(grep 'tests pass' results/report.html | awk '{print $1}')
+        FAILED=$(grep 'tests fail' results/report.html | awk '{print $1}')
         DURATION=$(grep -o 'Elapsed time: [^<]*' results/report.html | awk '{print $3, $4}')
         echo "| Tests  | $PASSED    | $FAILED    | $DURATION |" >> $GITHUB_STEP_SUMMARY

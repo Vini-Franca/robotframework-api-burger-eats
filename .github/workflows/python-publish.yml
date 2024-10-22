@@ -36,7 +36,7 @@ jobs:
 
       - name: Run Robot Framework tests
         run: |
-          robot --outputdir results tests/
+          robot --outputdir /home/runner/work/robotframework-api-burger-eats/robotframework-api-burger-eats/results tests/
           if [ $? -ne 0 ]; then
             echo "Robot Framework tests failed. Check the logs for details."
             exit 1
@@ -45,13 +45,13 @@ jobs:
       - name: List results directory
         run: |
           echo "Listing results directory..."
-          ls -la results
+          ls -la /home/runner/work/robotframework-api-burger-eats/robotframework-api-burger-eats/results
 
       - name: Upload test reports
         uses: actions/upload-artifact@v3
         with:
           name: reports
-          path: results/*
+          path: /home/runner/work/robotframework-api-burger-eats/robotframework-api-burger-eats/results/*
 
   generate_report:
     runs-on: ubuntu-latest
@@ -67,11 +67,11 @@ jobs:
       - name: Check downloaded files
         run: |
           echo "Checking downloaded reports..."
-          ls -la results  # Corrigido para usar 'results' em vez de 'reports'
+          ls -la /home/runner/work/robotframework-api-burger-eats/robotframework-api-burger-eats/results
 
       - name: Send report to commit
         uses: joonvena/robotframework-reporter-action@v2.5
         with:
           gh_access_token: ${{ secrets.GITHUB_TOKEN }}
-          report: results/report.html  # Usando o caminho correto para o relatório
-          log: results/log.html  # Usando o caminho correto para o log
+          report: /home/runner/work/robotframework-api-burger-eats/robotframework-api-burger-eats/results/report.html
+          log: /home/runner/work/robotframework-api-burger-eats/robotframework-api-burger-eats/results/log.html

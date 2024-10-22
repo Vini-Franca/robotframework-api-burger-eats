@@ -1,7 +1,6 @@
 name: Robot Framework API Tests
 on: [push]
 
-# Adiciona permissões necessárias
 permissions:
   checks: write
   pull-requests: write
@@ -40,41 +39,53 @@ jobs:
       - name: Run Robot Framework tests
         run: |
           robot --outputdir results --xunit output.xml tests/
-        continue-on-error: true  # Permite que o workflow continue mesmo se os testes falharem
+        continue-on-error: true
 
       - name: Generate detailed test summary
-        if: always()  # Executa mesmo se o passo anterior falhar
+        if: always()
         run: |
           echo "# 🤖 Robot Framework Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
           
-          # Extrair estatísticas básicas
-          TOTAL=$(grep -oP '(?<=total=")[^"]+' results/output.xml | head -1)
-          PASSED=$(grep -oP '(?<=pass=")[^"]+' results/output.xml | head -1)
-          FAILED=$(grep -oP '(?<=fail=")[^"]+' results/output.xml | head -1)
-          SKIPPED=$(grep -oP '(?<=skip=")[^"]+' results/output.xml | head -1)
+          # Função para extrair valores do XML usando xmllint
+          get_stat() {
+            xmllint --xpath "string(//statistics/total/stat[$1]/@pass)" results/output.xml
+          }
           
-          echo "| Total Tests | $TOTAL |" >> $GITHUB_STEP_SUMMARY
-          echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
-          echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
+          # Extrair estatísticas usando xpath
+          TOTAL=$(xmllint --xpath "count(//test)" results/output.xml)
+          PASSED=$(xmllint --xpath "count(//test[@status='PASS'])" results/output.xml)
+          FAILED=$(xmllint --xpath "count(//test[@status='FAIL'])" results/output.xml)
+          SKIPPED=0
+          
+          # Extrair duração
+          DURATION=$(xmllint --xpath "string(/robot/@generated)" results/output.xml)
+          START_TIME=$(xmllint --xpath "string(/robot/suite/@starttime)" results/output.xml)
+          END_TIME=$(xmllint --xpath "string(/robot/suite/@endtime)" results/output.xml)
+          
+          # Formatando a tabela
+          echo "| Total Tests | ${TOTAL%%.*} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | ${PASSED%%.*} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | ${FAILED%%.*} |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⏱️ Duration | $(echo $DURATION | grep -oP '\d+\:\d+\:\d+') |" >> $GITHUB_STEP_SUMMARY
           
-          # Adicionar detalhes de tempo
-          DURATION=$(grep -oP '(?<=elapsed=")[^"]+' results/output.xml | head -1)
-          echo "| ⏱️ Duration | $DURATION |" >> $GITHUB_STEP_SUMMARY
-          
-          # Adicionar seção de testes falhos (se houver)
-          if [ "$FAILED" != "0" ]; then
-            echo -e "\n## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${FAILED%%.*}" != "0" ]; then
+            echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Test Case | Error Message |" >> $GITHUB_STEP_SUMMARY
-            echo "|-----------|----------------|" >> $GITHUB_STEP_SUMMARY
+            echo "|-----------|---------------|" >> $GITHUB_STEP_SUMMARY
             
-            # Extrai nome e mensagem de erro dos testes falhos
-            grep -A 2 '<test status="FAIL"' results/output.xml | grep -E 'name="|<msg>' | \
-            sed -E 's/.*name="([^"]+)".*/\1/;s/.*<msg>(.*)<\/msg>/\1/' | \
-            paste -d '|' - - >> $GITHUB_STEP_SUMMARY
+            xmllint --xpath "//test[@status='FAIL']" results/output.xml | while IFS= read -r test; do
+              TEST_NAME=$(echo "$test" | grep -oP 'name="\K[^"]+')
+              ERROR_MSG=$(echo "$test" | grep -oP '<msg>\K[^<]+')
+              echo "| $TEST_NAME | $ERROR_MSG |" >> $GITHUB_STEP_SUMMARY
+            done
           fi
 
       - name: Upload test results
@@ -94,4 +105,4 @@ jobs:
         with:
           files: "results/output.xml"
           report_individual_runs: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}  # Explicitamente definindo o token
+          github_token: ${{ secrets.GITHUB_TOKEN }}

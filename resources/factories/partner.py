@@ -45,12 +45,48 @@ def factory_dup_name():
     }
     return  partner
 
+def factory_dup_email():
+    partner = {
+        "name": "Adega 3 irmãos",
+	    "email": "contato3@papito.com.br",
+	    "whatsapp": "19999999999",
+	    "business": "Conveniência"
+    }
+    return  partner
+
 def factory_404_partner():
     partner = {
         "name": "Frango Frito SA",
 	    "email": "contato@frangofrito.com.br",
 	    "whatsapp": "57999999999",
 	    "business": "Restaurante"
+    }
+    return  partner
+
+def factory_invalid_email():
+    partner = {
+        "name": "Frango Frito SA",
+	    "email": "contato@",
+	    "whatsapp": "57999999999",
+	    "business": "Restaurante"
+    }
+    return  partner
+
+def factory_invalid_whatsapp():
+    partner = {
+        "name": "Frango Frito SA",
+	    "email": "contato@frangofrito.com.br",
+	    "whatsapp": "5",
+	    "business": "Restaurante"
+    }
+    return  partner
+
+def factory_invalid_business():
+    partner = {
+        "name": "Frango Frito SA",
+	    "email": "contato@frangofrito.com.br",
+	    "whatsapp": "11999999999",
+	    "business": "R"
     }
     return  partner
 

@@ -4,5 +4,5 @@ Resource                     services.robot
 Resource                     database.robot
 Resource                     helpers.robot
 Library                      factories/partner.py
-
+Variables                    qa.yaml
 *** Variables ***

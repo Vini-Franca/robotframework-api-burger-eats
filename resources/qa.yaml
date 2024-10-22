@@ -1,0 +1,6 @@
+invalid_message:
+  whatsapp: Invalid whatsapp
+  email: Invalid email
+  duplicate_email: Duplicate email
+  business: Invalid business
+  duplicate_name: Duplicate company name

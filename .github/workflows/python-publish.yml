@@ -39,10 +39,17 @@ jobs:
           
       - name: Generate test summary
         run: |
-          echo "### Robot Framework Results" >> $GITHUB_STEP_SUMMARY
-          echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-----------|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "### Robot Framework Results" > summary.md
+          echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> summary.md
+          echo "|--------|-----------|-----------|-------------|" >> summary.md
           PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml | head -1)
           FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml | head -1)
           DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html)
-          echo "| Tests  | $PASSED    | $FAILED    | $DURATION |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests  | $PASSED    | $FAILED    | $DURATION |" >> summary.md
+          cat summary.md  # Exibe o conteúdo do resumo no log
+
+      - name: Upload test summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: robot-framework-summary
+          path: summary.md

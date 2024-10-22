@@ -17,9 +17,10 @@ jobs:
 
       - name: Install API dependencies
         run: |
-          cd api
+          cd api  # Correção para 'api' minúsculo
           npm install
           npm start &  # Inicia a API em segundo plano
+          sleep 5  # Aguarda um pouco para a API iniciar
 
       - name: Install Python and Robot Framework
         uses: actions/setup-python@v4
@@ -39,16 +40,17 @@ jobs:
           
       - name: Generate test summary
         run: |
+          set -e  # Interrompe a execução se um comando falhar
+          echo "### Robot Framework Results" > summary.md
+          echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> summary.md
+          echo "|--------|-----------|-----------|-------------|" >> summary.md
           if [ -f results/output.xml ]; then
-            echo "### Robot Framework Results" > summary.md
-            echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> summary.md
-            echo "|--------|-----------|-----------|-------------|" >> summary.md
             PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml | head -1)
             FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml | head -1)
             DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html)
             echo "| Tests  | $PASSED    | $FAILED    | $DURATION |" >> summary.md
           else
-            echo "Results not found."
+            echo "Results not found." >> summary.md
           fi
 
       - name: Upload test summary

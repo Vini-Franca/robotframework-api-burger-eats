@@ -44,7 +44,6 @@ jobs:
           mv results/report.html reports/report.html
           mv results/output.xml reports/output.xml
           mv results/log.html reports/log.html
-          mv results/summary.html reports/summary.html
 
       - name: Generate Summary for GitHub Actions
         run: |

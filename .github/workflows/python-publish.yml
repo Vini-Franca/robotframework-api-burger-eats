@@ -43,7 +43,7 @@ jobs:
         pip install robotframework
         pip install robotframework-requests
         pip install robotframework-yamllibrary
-        pip install robotframework-mongodb-library
+        pip install robotframework-mongodb
 
     - name: Run Robot Framework tests
       run: |

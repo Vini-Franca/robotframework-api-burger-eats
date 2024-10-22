@@ -64,11 +64,12 @@ jobs:
       - name: Check downloaded files
         run: |
           echo "Checking downloaded reports..."
-          ls -la results  # Usando o caminho do diretório baixado para verificar os arquivos
+          ls -la results  # Verificando os arquivos no diretório 'results'
 
       - name: Send report to commit
         uses: joonvena/robotframework-reporter-action@v2.5
         with:
           gh_access_token: ${{ secrets.GITHUB_TOKEN }}
-          report: results/report.html
-          log: results/log.html
+          report: results/report.html  # Caminho corrigido
+          log: results/log.html  # Caminho corrigido
+          output: results/output.xml  # Corrigindo o caminho do arquivo de saída

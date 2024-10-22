@@ -1,0 +1,50 @@
+name: Robot Framework API Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' # Ou outra versão necessária
+
+    - name: Install dependencies for API
+      run: |
+        cd api
+        npm install
+
+    - name: Start API
+      run: |
+        cd api
+        npm start &
+      env:
+        NODE_ENV: production
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Python dependencies
+      run: |
+        pip install robotframework
+        pip install robotframework-requests
+        pip install robotframework-yamllibrary
+        pip install robotframework-mongodb-library
+
+    - name: Run Robot Framework tests
+      run: |
+        robot tests/

@@ -49,13 +49,30 @@ jobs:
           echo "Listing results directory..."
           ls -la results
 
+      - name: Check output.xml and report.html
+        run: |
+          if [ -f results/output.xml ]; then
+            cat results/output.xml
+          else
+            echo "output.xml not found."
+          fi
+          if [ -f results/report.html ]; then
+            cat results/report.html
+          else
+            echo "report.html not found."
+          fi
+
+      - name: Install xmlstarlet
+        run: |
+          sudo apt-get install -y xmlstarlet
+
       - name: Generate Simple Summary
         run: |
           echo "Robot Framework Results:" > summary.txt
           if [ -f results/output.xml ]; then
-            PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml || echo "0")
-            FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml || echo "0")
-            DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html || echo "N/A")
+            PASSED=$(xmlstarlet sel -t -v "//statistics/pass" results/output.xml || echo "0")
+            FAILED=$(xmlstarlet sel -t -v "//statistics/fail" results/output.xml || echo "0")
+            DURATION=$(xmlstarlet sel -t -v "//statistics/elapsedtime" results/output.xml || echo "N/A")
             echo "Tests Passed: $PASSED" >> summary.txt
             echo "Tests Failed: $FAILED" >> summary.txt
             echo "Total Duration: $DURATION" >> summary.txt
@@ -69,4 +86,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: robot-framework-reports
-          path: results/
+          path: results/*

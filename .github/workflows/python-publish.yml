@@ -73,13 +73,14 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4  # Atualizado para v4
         with:
           name: robot-framework-results
           path: |
             results/report.html
             results/log.html
             results/output.xml
+          retention-days: 30  # Opcional: define por quantos dias manter os artefatos
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2

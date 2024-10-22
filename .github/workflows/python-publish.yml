@@ -43,7 +43,7 @@ jobs:
           fi
 
       - name: Upload test reports with Robot Reporter
-        uses: ./.github/actions/robot-reporter  # Aponte para o local onde a ação está configurada
+        uses: robotframework/robot-reporter@v1.0.0  # Use a versão específica ou a mais recente
         with:
           output: results/report.html
-          format: markdown  # Ou o formato que você preferir
+          format: markdown  # ou 'html' se preferir

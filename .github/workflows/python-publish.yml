@@ -49,19 +49,26 @@ jobs:
           echo "Listing results directory..."
           ls -la results
 
-      - name: Generate and Upload HTML Report
+      - name: Check output.xml and report.html
         run: |
-          mkdir -p reports
-          mv results/report.html reports/report.html
-          mv results/output.xml reports/output.xml
-          mv results/log.html reports/log.html
+          echo "Checking for output.xml and report.html..."
+          if [ -f results/output.xml ]; then
+            cat results/output.xml
+          else
+            echo "output.xml not found."
+          fi
+          if [ -f results/report.html ]; then
+            cat results/report.html
+          else
+            echo "report.html not found."
+          fi
 
       - name: Generate Summary for GitHub Actions
         run: |
+          echo "### Robot Framework Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-----------|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
           if [ -f results/output.xml ]; then
-            echo "### Robot Framework Results" >> $GITHUB_STEP_SUMMARY
-            echo "| Result | Passed ✅ | Failed ❌ | Duration 🕗 |" >> $GITHUB_STEP_SUMMARY
-            echo "|--------|-----------|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
             PASSED=$(grep -oP '(?<=Pass )[0-9]+' results/output.xml | head -1)
             FAILED=$(grep -oP '(?<=Fail )[0-9]+' results/output.xml | head -1)
             DURATION=$(grep -oP '(?<=Elapsed time: )[^<]+' results/report.html)
@@ -74,4 +81,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: robot-framework-reports
-          path: reports/*
+          path: results/*

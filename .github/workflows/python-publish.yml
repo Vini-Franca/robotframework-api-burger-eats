@@ -44,6 +44,10 @@ jobs:
       - name: Generate detailed test summary
         if: always()
         run: |
+          # Instalar libxml2-utils que contém xmllint
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+          
           echo "# 🤖 Robot Framework Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
@@ -51,40 +55,49 @@ jobs:
           echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
           
-          # Função para extrair valores do XML usando xmllint
-          get_stat() {
-            xmllint --xpath "string(//statistics/total/stat[$1]/@pass)" results/output.xml
-          }
-          
-          # Extrair estatísticas usando xpath
-          TOTAL=$(xmllint --xpath "count(//test)" results/output.xml)
-          PASSED=$(xmllint --xpath "count(//test[@status='PASS'])" results/output.xml)
-          FAILED=$(xmllint --xpath "count(//test[@status='FAIL'])" results/output.xml)
+          # Extrair estatísticas usando grep
+          TOTAL=$(grep -oP 'total="[^"]+"' results/output.xml | head -1 | grep -oP '\d+')
+          PASSED=$(grep -oP 'pass="[^"]+"' results/output.xml | head -1 | grep -oP '\d+')
+          FAILED=$(grep -oP 'fail="[^"]+"' results/output.xml | head -1 | grep -oP '\d+')
           SKIPPED=0
           
           # Extrair duração
-          DURATION=$(xmllint --xpath "string(/robot/@generated)" results/output.xml)
-          START_TIME=$(xmllint --xpath "string(/robot/suite/@starttime)" results/output.xml)
-          END_TIME=$(xmllint --xpath "string(/robot/suite/@endtime)" results/output.xml)
+          START_TIME=$(grep -oP 'starttime="[^"]+"' results/output.xml | head -1 | grep -oP '\d{8} \d{2}:\d{2}:\d{2}\.\d{3}')
+          END_TIME=$(grep -oP 'endtime="[^"]+"' results/output.xml | head -1 | grep -oP '\d{8} \d{2}:\d{2}:\d{2}\.\d{3}')
+          
+          # Garantir que temos valores, caso contrário usar valores padrão
+          TOTAL=${TOTAL:-0}
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
           
           # Formatando a tabela
-          echo "| Total Tests | ${TOTAL%%.*} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ✅ Passed | ${PASSED%%.*} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ❌ Failed | ${FAILED%%.*} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Tests | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
           echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
-          echo "| ⏱️ Duration | $(echo $DURATION | grep -oP '\d+\:\d+\:\d+') |" >> $GITHUB_STEP_SUMMARY
+          
+          # Extrair e formatar a duração do arquivo de log
+          if [ -f "results/log.html" ]; then
+            DURATION=$(grep -oP 'Elapsed time: \K[^<]+' results/log.html)
+            echo "| ⏱️ Duration | $DURATION |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ⏱️ Duration | N/A |" >> $GITHUB_STEP_SUMMARY
+          fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${FAILED%%.*}" != "0" ]; then
+          if [ "$FAILED" != "0" ]; then
             echo "## ❌ Failed Tests" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Test Case | Error Message |" >> $GITHUB_STEP_SUMMARY
             echo "|-----------|---------------|" >> $GITHUB_STEP_SUMMARY
             
-            xmllint --xpath "//test[@status='FAIL']" results/output.xml | while IFS= read -r test; do
-              TEST_NAME=$(echo "$test" | grep -oP 'name="\K[^"]+')
-              ERROR_MSG=$(echo "$test" | grep -oP '<msg>\K[^<]+')
-              echo "| $TEST_NAME | $ERROR_MSG |" >> $GITHUB_STEP_SUMMARY
+            # Extrair detalhes dos testes falhos
+            grep -A 2 '<test status="FAIL"' results/output.xml | \
+            grep -E 'name="|<msg>' | \
+            sed -E 's/.*name="([^"]+)".*/\1/;s/.*<msg>(.*)<\/msg>/\1/' | \
+            paste -d '|' - - | \
+            while IFS='|' read -r test_name error_msg; do
+              echo "| $test_name | $error_msg |" >> $GITHUB_STEP_SUMMARY
             done
           fi
 

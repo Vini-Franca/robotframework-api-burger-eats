@@ -17,10 +17,10 @@ jobs:
 
       - name: Install API dependencies
         run: |
-          cd api  # Correção para 'api' minúsculo
+          cd api
           npm install
-          npm start &  # Inicia a API em segundo plano
-          sleep 5  # Aguarda um pouco para a API iniciar
+          npm start & 
+          sleep 5 
 
       - name: Install Python and Robot Framework
         uses: actions/setup-python@v4
@@ -41,49 +41,9 @@ jobs:
             echo "Robot Framework tests failed. Check the logs for details."
             exit 1
           fi
-          # Imprimir logs
-          cat results/log.html
 
-      - name: List results directory
-        run: |
-          echo "Listing results directory..."
-          ls -la results
-
-      - name: Check output.xml and report.html
-        run: |
-          if [ -f results/output.xml ]; then
-            cat results/output.xml
-          else
-            echo "output.xml not found."
-          fi
-          if [ -f results/report.html ]; then
-            cat results/report.html
-          else
-            echo "report.html not found."
-          fi
-
-      - name: Install xmlstarlet
-        run: |
-          sudo apt-get install -y xmlstarlet
-
-      - name: Generate Simple Summary
-        run: |
-          echo "Robot Framework Results:" > summary.txt
-          if [ -f results/output.xml ]; then
-            PASSED=$(xmlstarlet sel -t -v "//statistics/pass" results/output.xml || echo "0")
-            FAILED=$(xmlstarlet sel -t -v "//statistics/fail" results/output.xml || echo "0")
-            DURATION=$(xmlstarlet sel -t -v "//statistics/elapsedtime" results/output.xml || echo "N/A")
-            echo "Tests Passed: $PASSED" >> summary.txt
-            echo "Tests Failed: $FAILED" >> summary.txt
-            echo "Total Duration: $DURATION" >> summary.txt
-          else
-            echo "output.xml not found. Results not available." >> summary.txt
-          fi
-          # Adicionar o resumo ao GITHUB_STEP_SUMMARY
-          cat summary.txt >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload test reports
-        uses: actions/upload-artifact@v3
+      - name: Upload test reports with Robot Reporter
+        uses: ./.github/actions/robot-reporter  # Aponte para o local onde a ação está configurada
         with:
-          name: robot-framework-reports
-          path: results/*
+          output: results/report.html
+          format: markdown  # Ou o formato que você preferir

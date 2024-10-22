@@ -20,7 +20,7 @@ jobs:
           cd api
           npm install
           npm start & 
-          sleep 5 
+          sleep 5
 
       - name: Install Python and Robot Framework
         uses: actions/setup-python@v4
@@ -36,7 +36,8 @@ jobs:
 
       - name: Run Robot Framework tests
         run: |
-          robot --outputdir results tests/
+          # Criando o diretório 'reports' para os resultados
+          robot --outputdir reports tests/
           if [ $? -ne 0 ]; then
             echo "Robot Framework tests failed. Check the logs for details."
             exit 1
@@ -46,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: reports
-          path: results/
+          path: reports/
 
   generate_report:
     runs-on: ubuntu-latest
@@ -59,17 +60,17 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: reports
-          path: results/  # Verifique o caminho correto para o diretório de resultados
+          path: reports/
 
       - name: Check downloaded files
         run: |
           echo "Checking downloaded reports..."
-          ls -la results  # Verificando os arquivos no diretório 'results'
+          ls -la reports  # Verificando os arquivos no diretório 'reports'
 
       - name: Send report to commit
         uses: joonvena/robotframework-reporter-action@v2.5
         with:
           gh_access_token: ${{ secrets.GITHUB_TOKEN }}
-          report: results/report.html  # Caminho corrigido
-          log: results/log.html  # Caminho corrigido
-          output: results/output.xml  # Corrigindo o caminho do arquivo de saída
+          report: reports/report.html
+          log: reports/log.html
+          output: reports/output.xml
